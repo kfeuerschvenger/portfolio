@@ -1,0 +1,27 @@
+services:
+  portfolio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: portfolio-kfeuerschvenger
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    networks:
+      - nginx-proxy
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "com.nginx-proxy-manager.enable=true"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+networks:
+  nginx-proxy:
+    external: true  # Si ya tienes una red de nginx proxy manager
+    # Si no, cambia a:
+    # driver: bridge
