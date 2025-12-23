@@ -62,8 +62,9 @@ export const AboutSection = () => {
               <div className="text-muted-foreground leading-relaxed max-w-2xl">
                 <span className="text-accent"> * </span>
                 Co-founder of <span className="text-primary">Unitecnica</span> - built custom management systems,
-                client portals, and automated workflows. Previous experience at <span className="text-primary">Sur Software</span>
-                with ETL pipelines and ERP implementations.
+                client portals, and automated workflows. Previous experience 
+                at <span className="text-primary">Sur Software</span> with ETL pipelines 
+                and ERP implementations.
               </div>
             </div>
             
@@ -77,7 +78,7 @@ export const AboutSection = () => {
             </div>
             
             <div className="flex items-start gap-4">
-              <span className="text-muted-foreground/50 text-right w-8 select-none">7</span>
+              <span className="text-muted-foreground/50 text-right w-8 select-none">8</span>
               <div className="text-foreground">
                 <span className="text-accent"> */</span>
               </div>

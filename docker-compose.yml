@@ -5,8 +5,6 @@ services:
       dockerfile: Dockerfile
     container_name: portfolio-kfeuerschvenger
     restart: unless-stopped
-    ports:
-      - "3000:80"
     networks:
       - nginx-proxy
     environment:
@@ -22,6 +20,5 @@ services:
 
 networks:
   nginx-proxy:
-    external: true  # Si ya tienes una red de nginx proxy manager
-    # Si no, cambia a:
-    # driver: bridge
+    external: true
+    name: your_nginxproxymanager_network_name
