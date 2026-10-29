@@ -7,10 +7,16 @@
 // browser frame. The hero slug records a video instead, which gif.mjs turns
 // into a GIF and an MP4.
 //
+// Everything requested runs in one invocation: one build, one preview server. A
+// failing shot does not stop the others; every failure is reported and the exit
+// code is non-zero at the end. Stills are written to out/ first and copied to the
+// output folder only when both files of the still exist.
+//
 // Usage, from e2e/showcase/:
 //   node capture.mjs                     every still
+//   node capture.mjs all                 every still and the hero video
 //   SLUGS=hero,about node capture.mjs    a subset (a slug may also be an argument)
-//   node capture.mjs hero                the video, for gif.mjs
+//   node capture.mjs hero-video          the video, for gif.mjs
 
 import { spawn, spawnSync } from 'node:child_process';
 import { copyFile, mkdir, rm, stat, writeFile } from 'node:fs/promises';
@@ -25,14 +31,26 @@ const REPO = path.resolve(here, '..', '..');
 const OUT = process.env.SHOWCASE_OUT ? path.resolve(process.env.SHOWCASE_OUT) : path.join(REPO, 'docs', 'assets', 'screens');
 /** The hero video and its cut points, which are not committed. */
 const WORK = path.join(here, 'out');
+/** Stills are written here first and published to OUT once both files exist. */
+const STAGE = path.join(WORK, 'stills');
 
 const VIEWPORT = { width: 1600, height: 1000 };
 const MOBILE_VIEWPORT = { width: 390, height: 844 };
 /** Stills are taken at twice the pixel density, for crisp text. */
 const RAW_SCALE = 2;
 const MOBILE_SCALE = 3;
-/** The framed composite is rendered at this density. */
-const FRAME_SCALE = Number(process.env.SHOWCASE_FRAME_SCALE ?? 1.25);
+/** The framed composite is rendered at this density unless SHOWCASE_FRAME_SCALE says otherwise. */
+const DEFAULT_FRAME_SCALE = 1.25;
+
+/** An empty value falls back to the default; anything else must be a finite number above zero. */
+const parseFrameScale = raw => {
+  if (raw === undefined || raw.trim() === '') return DEFAULT_FRAME_SCALE;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(`SHOWCASE_FRAME_SCALE must be a finite number greater than 0, got "${raw}"`);
+  }
+  return value;
+};
 
 const NAME = 'Kevin Feuerschvenger';
 const SUBTITLE = 'Software Engineer';
@@ -101,12 +119,36 @@ const startServer = async () => {
   });
 
   const base = `http://127.0.0.1:${port}`;
-  const stop = async () => {
-    if (server.exitCode === null) {
+  const running = () => server.exitCode === null && server.signalCode === null;
+
+  /** Kills the server synchronously, the whole tree on Windows where kill() can leave children behind. */
+  const killNow = () => {
+    if (!running() || server.pid === undefined) return;
+    if (process.platform === 'win32') {
+      spawnSync('taskkill', ['/pid', String(server.pid), '/T', '/F'], { stdio: 'ignore' });
+    } else {
       server.kill();
-      await new Promise(resolve => server.once('exit', resolve));
     }
   };
+
+  const stop = async () => {
+    if (!running()) return;
+    const exited = new Promise(resolve => server.once('exit', resolve));
+    killNow();
+    await Promise.race([exited, new Promise(resolve => setTimeout(resolve, 5000))]);
+  };
+
+  // Ctrl+C, a termination signal or any exit path must not leave the server listening.
+  process.on('exit', killNow);
+  for (const [signal, code] of [
+    ['SIGINT', 130],
+    ['SIGTERM', 143],
+  ]) {
+    process.on(signal, () => {
+      killNow();
+      process.exit(code);
+    });
+  }
 
   try {
     await waitForServer(base, server);
@@ -159,11 +201,14 @@ const jumpTo = async (page, id, offset = 0) => {
   await waitForScrollEnd(page);
 };
 
-/** Throws when the text is not on the page, so a broken render fails the shot instead of being committed. */
+/** Throws when the text does not become visible, so a broken render fails the shot instead of being committed. */
 const assertText = async (page, ...texts) => {
   for (const text of texts) {
-    const found = await page.getByText(text, { exact: false }).first().isVisible();
-    if (!found) throw new Error(`expected text "${text}" is not visible`);
+    try {
+      await page.getByText(text, { exact: false }).filter({ visible: true }).first().waitFor({ state: 'visible', timeout: 5000 });
+    } catch {
+      throw new Error(`expected text "${text}" is not visible`);
+    }
   }
 };
 
@@ -305,7 +350,8 @@ const SLUGS = [...SHOTS.map(shot => shot.slug), HERO_VIDEO];
 
 /**
  * The slug of the recording is `hero-video`, because `hero` is the still. The README
- * and the output files call the animation hero (hero.gif, hero.mp4).
+ * and the output files call the animation hero (hero.gif, hero.mp4). The word `all`
+ * stands for every still and the recording.
  */
 const selectSlugs = () => {
   const requested = [process.env.SLUGS ?? '', ...process.argv.slice(2)]
@@ -313,11 +359,12 @@ const selectSlugs = () => {
     .map(slug => slug.trim())
     .filter(Boolean);
 
-  const unknown = requested.filter(slug => !SLUGS.includes(slug));
+  const unknown = requested.filter(slug => slug !== 'all' && !SLUGS.includes(slug));
   if (unknown.length > 0) {
-    throw new Error(`Unknown slug ${unknown.join(', ')}. Known slugs: ${SLUGS.join(', ')}`);
+    throw new Error(`Unknown slug ${unknown.join(', ')}. Known slugs: all, ${SLUGS.join(', ')}`);
   }
 
+  if (requested.includes('all')) return SLUGS;
   return requested.length > 0 ? requested : SHOTS.map(shot => shot.slug);
 };
 
@@ -356,11 +403,19 @@ const takeStill = async (shot, { browser, base, framePage }) => {
       device: shot.mobile ? 'phone' : 'browser',
     });
 
-    await writeFile(path.join(OUT, `${shot.slug}.png`), raw);
-    await writeFile(path.join(OUT, `${shot.slug}-framed.png`), framed);
+    // Staged first: the committed files change only when both of them exist.
+    const files = [`${shot.slug}.png`, `${shot.slug}-framed.png`];
+    await writeFile(path.join(STAGE, files[0]), raw);
+    await writeFile(path.join(STAGE, files[1]), framed);
+    return files;
   } finally {
     await context.close();
   }
+};
+
+/** Copies the staged files of a still into the output folder. */
+const publish = async files => {
+  for (const file of files) await copyFile(path.join(STAGE, file), path.join(OUT, file));
 };
 
 // ---------------------------------------------------------------------------
@@ -398,7 +453,10 @@ const sectionTop = (page, id, shift = 0) =>
  */
 const recordHero = async base => {
   const dir = path.join(WORK, 'video');
+  // A failed take must not leave a previous recording behind for gif.mjs to convert.
   await rm(dir, { recursive: true, force: true });
+  await rm(path.join(WORK, 'hero.webm'), { force: true });
+  await rm(path.join(WORK, 'hero.json'), { force: true });
 
   const browser = await chromium.launch({ channel: 'chromium' });
   const context = await browser.newContext({
@@ -412,7 +470,9 @@ const recordHero = async base => {
 
   try {
     const page = await context.newPage();
-    const recordingStarted = Date.now();
+    // The clock starts as soon as the page exists, which is when the video starts.
+    const recordingStarted = performance.now();
+    const elapsed = () => (performance.now() - recordingStarted) / 1000;
 
     // Load once so the fonts are cached, then reload for the recorded take: the typing
     // animation runs again, and the text is set in the terminal font from the first frame.
@@ -422,8 +482,9 @@ const recordHero = async base => {
     await page.waitForTimeout(300);
     await page.goto('about:blank');
 
-    // The footage before this moment is the warm up, and gif.mjs cuts it.
-    const startAt = (Date.now() - recordingStarted) / 1000 + 0.3;
+    // The footage before this moment is the warm up, and gif.mjs cuts it. The mark is
+    // read on the line before the navigation, with the safety margin added.
+    const startAt = elapsed() + 0.3;
     await page.goto(`${base}/`);
     await waitForHero(page);
     await assertText(page, NAME, SUBTITLE);
@@ -443,7 +504,7 @@ const recordHero = async base => {
     }
     await assertText(page, 'ai/');
 
-    const endAt = (Date.now() - recordingStarted) / 1000;
+    const endAt = elapsed();
     await context.close();
     const video = await page.video().path();
     await copyFile(video, path.join(WORK, 'hero.webm'));
@@ -462,7 +523,11 @@ const main = async () => {
   const slugs = selectSlugs();
   const stills = SHOTS.filter(shot => slugs.includes(shot.slug));
 
+  // Fail on a bad value before anything is built.
+  const frameScale = stills.length > 0 ? parseFrameScale(process.env.SHOWCASE_FRAME_SCALE) : DEFAULT_FRAME_SCALE;
+
   await mkdir(WORK, { recursive: true });
+  await mkdir(STAGE, { recursive: true });
   await mkdir(OUT, { recursive: true });
 
   const failures = [];
@@ -472,22 +537,38 @@ const main = async () => {
   };
 
   const server = await startServer();
-  let browser;
+
+  /** The headless shell and the frame page exist only when stills are requested. */
+  const captureStills = async () => {
+    const reported = new Set();
+    let browser;
+    try {
+      browser = await chromium.launch();
+      const frameContext = await browser.newContext({ viewport: { width: 2000, height: 1500 }, deviceScaleFactor: frameScale });
+      const framePage = await frameContext.newPage();
+      await framePage.goto(pathToFileURL(path.join(here, 'frame.html')).href);
+
+      for (const shot of stills) {
+        reported.add(shot.slug);
+        try {
+          const files = await takeStill(shot, { browser, base: server.base, framePage });
+          await publish(files);
+          const [raw, framed] = await Promise.all(files.map(file => kilobytes(path.join(OUT, file))));
+          report(shot.slug, true, `${raw} raw, ${framed} framed`);
+        } catch (error) {
+          report(shot.slug, false, error.message.split('\n')[0]);
+        }
+      }
+    } catch (error) {
+      // The browser or the frame page failed: every still not yet reported failed with it.
+      for (const shot of stills.filter(item => !reported.has(item.slug))) report(shot.slug, false, error.message.split('\n')[0]);
+    } finally {
+      await browser?.close().catch(() => {});
+    }
+  };
 
   try {
-    browser = await chromium.launch();
-    const frameContext = await browser.newContext({ viewport: { width: 2000, height: 1500 }, deviceScaleFactor: FRAME_SCALE });
-    const framePage = await frameContext.newPage();
-    await framePage.goto(pathToFileURL(path.join(here, 'frame.html')).href);
-
-    for (const shot of stills) {
-      try {
-        await takeStill(shot, { browser, base: server.base, framePage });
-        report(shot.slug, true, `${await kilobytes(path.join(OUT, `${shot.slug}.png`))} raw, ${await kilobytes(path.join(OUT, `${shot.slug}-framed.png`))} framed`);
-      } catch (error) {
-        report(shot.slug, false, error.message.split('\n')[0]);
-      }
-    }
+    if (stills.length > 0) await captureStills();
 
     if (slugs.includes(HERO_VIDEO)) {
       try {
@@ -498,7 +579,6 @@ const main = async () => {
       }
     }
   } finally {
-    await browser?.close().catch(() => {});
     await server.stop();
   }
 

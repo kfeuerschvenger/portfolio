@@ -5,14 +5,15 @@
 // recording that shows the page loading and the scroll (capture.mjs writes the
 // cut points beside the video). It must stay under 8 MB, which is what the README
 // can carry without slowing the page. When the first encode is over, the script
-// retries with coarser dithering and fewer colours before it gives up.
+// retries with coarser dithering and fewer colours before it gives up. Both files
+// are encoded under out/ and copied to the output folder only on success.
 //
 // ffmpeg is found through FFMPEG, then the PATH.
 //
 // Usage, from e2e/showcase/: node gif.mjs
 
 import { spawnSync } from 'node:child_process';
-import { mkdir, readFile, stat } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -66,18 +67,26 @@ const run = (label, args) => {
 const video = path.join(WORK, 'hero.webm');
 let cut;
 
+const cutFile = path.join(WORK, 'hero.json');
 try {
-  await stat(video);
-  cut = JSON.parse(await readFile(path.join(WORK, 'hero.json'), 'utf8'));
+  const [videoStat, cutStat] = await Promise.all([stat(video), stat(cutFile)]);
+  // capture.mjs writes the cut points after the video, so older cut points belong to another take.
+  if (cutStat.mtimeMs < videoStat.mtimeMs) {
+    fail(`${cutFile} is older than ${video}, so the cut points are stale. Record again: node capture.mjs hero-video`);
+  }
+  cut = JSON.parse(await readFile(cutFile, 'utf8'));
 } catch {
-  fail(`No recording at ${video}. Record it first: node capture.mjs hero-video`);
+  fail(`No usable recording at ${video} and ${cutFile}. Record it first: node capture.mjs hero-video`);
 }
 
 await mkdir(OUT, { recursive: true });
 
+// Everything is encoded to temporary names in out/ and published only when the GIF fits.
 const palette = path.join(WORK, 'hero-palette.png');
-const gif = path.join(OUT, 'hero.gif');
-const mp4 = path.join(OUT, 'hero.mp4');
+const gif = path.join(WORK, 'hero.tmp.gif');
+const mp4 = path.join(WORK, 'hero.tmp.mp4');
+const finalGif = path.join(OUT, 'hero.gif');
+const finalMp4 = path.join(OUT, 'hero.mp4');
 const trim = ['-ss', String(cut.start), '-to', String(cut.end), '-i', video];
 const scale = `fps=${FPS},scale=${WIDTH}:-1:flags=lanczos`;
 const snap = step => `lutrgb=r='trunc(val/${step})*${step}':g='trunc(val/${step})*${step}':b='trunc(val/${step})*${step}'`;
@@ -109,6 +118,14 @@ for (const attempt of ATTEMPTS) {
   if (gifBytes <= MAX_GIF_BYTES) break;
 }
 
+if (gifBytes > MAX_GIF_BYTES) {
+  await rm(gif, { force: true });
+  fail(
+    `hero.gif is ${megabytes(gifBytes)}, over the ${megabytes(MAX_GIF_BYTES)} limit. The existing assets were left untouched. ` +
+      'Tune WIDTH (output width) or FPS at the top of gif.mjs, the colour step and colour count in ATTEMPTS, or shorten the flow in capture.mjs.'
+  );
+}
+
 run('encoding the MP4', [
   ...trim,
   '-vf',
@@ -127,9 +144,13 @@ run('encoding the MP4', [
   mp4,
 ]);
 
-console.log(`OK   hero.gif  ${megabytes(gifBytes)}`);
-console.log(`OK   hero.mp4  ${megabytes(await size(mp4))}`);
+const mp4Bytes = await size(mp4);
 
-if (gifBytes > MAX_GIF_BYTES) {
-  fail(`hero.gif is ${megabytes(gifBytes)}, over the ${megabytes(MAX_GIF_BYTES)} limit. Lower WIDTH or FPS in gif.mjs, or shorten the flow.`);
-}
+// Both encodes succeeded and the GIF fits: publish them.
+await copyFile(gif, finalGif);
+await copyFile(mp4, finalMp4);
+await rm(gif, { force: true });
+await rm(mp4, { force: true });
+
+console.log(`OK   hero.gif  ${megabytes(gifBytes)}`);
+console.log(`OK   hero.mp4  ${megabytes(mp4Bytes)}`);

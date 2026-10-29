@@ -20,7 +20,7 @@ flowchart LR
 ## Requirements
 
 - Node 22 or later, and the app's own dependencies installed at the repo root (`npm ci`), because the capture builds and previews the app.
-- Playwright and its Chromium, from this folder: `npm ci` and `npm run install:browsers`. The hero is recorded in the full Chromium build, which this install provides.
+- Playwright and its Chromium, from this folder: `npm ci` and `npm run install:browsers`. Playwright is pinned to the exact version in the lockfile. The hero is recorded in the full Chromium build, which this install provides.
 - Internet access, because the site loads JetBrains Mono from Google Fonts. A shot fails when the font did not load.
 - ffmpeg for the GIF and the MP4. Set `FFMPEG` to the executable when it is installed but not on the PATH.
 
@@ -31,26 +31,33 @@ From this folder:
 ```bash
 npm run showcase           # every still
 npm run showcase:hero      # record the hero flow, then convert it
-npm run showcase:all       # both
+npm run showcase:all       # stills and recording in one run, then convert
 ```
 
-From the repo root, `npm run showcase` runs everything.
+`showcase:all` calls `capture.mjs` once with the slug `all`, so there is one build and one preview server for the stills and the recording, and then `gif.mjs`. From the repo root, `npm run showcase` runs the same thing.
 
-On Windows with the winget build of ffmpeg, in Git Bash:
+When ffmpeg is installed but not on the PATH, find it and point `FFMPEG` at it. In PowerShell:
 
-```bash
-export FFMPEG="$LOCALAPPDATA/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-9.0.2-full_build/bin/ffmpeg.exe"
+```powershell
+(Get-Command ffmpeg).Source
+$env:FFMPEG = "C:\path\to\ffmpeg.exe"
 ```
+
+In Git Bash, `where ffmpeg` or `command -v ffmpeg` prints the path. The winget build lives under `%LOCALAPPDATA%\Microsoft\WinGet\Packages\Gyan.FFmpeg_*\ffmpeg-*\bin`, and the version folder name changes with each release, so list that folder instead of copying a path.
 
 | Variable | Default | Meaning |
 |---|---|---|
 | `SHOWCASE_URL` | Builds and serves the app | A running page to capture instead, for example `http://localhost:5173`. Nothing is built or started |
-| `SLUGS` | Every still | A comma separated list of slugs. A slug may also be passed as an argument |
-| `SHOWCASE_OUT` | `docs/assets/screens` | Where the shots and the animation are written |
-| `SHOWCASE_FRAME_SCALE` | `1.25` | The pixel density of the framed shots |
+| `SLUGS` | Every still | A comma separated list of slugs, or `all` for the stills and the recording. A slug may also be passed as an argument |
+| `SHOWCASE_OUT` | `docs/assets/screens` | Where the shots and the animation are published |
+| `SHOWCASE_FRAME_SCALE` | `1.25` | The pixel density of the framed shots. Must be a finite number above 0, empty means the default |
 | `FFMPEG` | `ffmpeg` | The ffmpeg executable |
 
-The script prints `OK` or `FAIL` for each shot and exits non-zero when any failed. The preview server is stopped at the end, also when a shot fails.
+The script prints `OK` or `FAIL` for each shot and exits non-zero at the end when any failed. A failing still does not stop the other shots or the recording.
+
+The preview server is stopped at the end, also when a shot fails. It is also stopped on Ctrl+C and on SIGTERM, and on any exit of the process: on Windows the process tree is killed with `taskkill /T /F`. A hard kill of node itself (for example `taskkill /F` on the capture process) cannot run any handler and can leave the server listening.
+
+Outputs are atomic. Stills are written to `out/stills/` and copied to the output folder only when both the raw and the framed file of that still exist. `gif.mjs` encodes the GIF and the MP4 to temporary files in `out/` and copies them only when the GIF fits the 8 MB budget, so a failed run leaves the committed assets untouched. The recording step deletes the previous `out/hero.webm` and `out/hero.json` first, and `gif.mjs` refuses to run when `hero.json` is missing or older than `hero.webm`.
 
 ## The shots
 
