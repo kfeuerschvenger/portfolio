@@ -1,13 +1,18 @@
 name: CI
 
-# Runs on every pull request into develop and main and on every push to them.
-# The job names below are what branch protection requires, so renaming one
-# detaches it from the rule: quality, audit, docker.
+# Runs on every pull request into develop and main, on every push to them, and weekly.
+# The weekly run exists so npm audit reports new advisories even when nobody pushes.
+# Branch protection requires the quality and docker job names, so renaming either detaches
+# it from the rule. audit is deliberately not a required check: a new upstream advisory
+# would otherwise block unrelated pull requests.
 on:
   pull_request:
     branches: [develop, main]
   push:
     branches: [develop, main]
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
 
 permissions:
   contents: read
