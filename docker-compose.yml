@@ -8,7 +8,9 @@ services:
     networks:
       - nginx-proxy
     environment:
-      # Network nginx-proxy-manager connects from, trusted for X-Forwarded-For (per-visitor rate limits)
+      # Network nginx-proxy-manager connects from, trusted for X-Forwarded-For (per-visitor rate limits).
+      # The default is the whole Docker bridge range. Narrow it to the subnet of the proxy network
+      # (docker network inspect <network>), for example 172.18.0.0/16. It must not be empty.
       - TRUSTED_PROXY_CIDR=${TRUSTED_PROXY_CIDR:-172.16.0.0/12}
     # Uncomment to reach the site without the proxy, for example at http://localhost:8080
     # ports:
