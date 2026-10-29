@@ -4,23 +4,65 @@ import { ParallaxSection } from './ParallaxSection';
 const skillCategories = [
   {
     category: 'frontend',
-    skills: ['React', 'TypeScript', 'JavaScript', 'AngularJS', 'HTML5', 'CSS3'],
+    skills: ['React', 'TypeScript', 'JavaScript', 'AngularJS', 'HTML5', 'CSS3', 'Vite', 'Tailwind CSS'],
   },
   {
     category: 'backend',
-    skills: ['Java (Spring Boot)', 'Node.js (Express)', 'PHP (Laravel)', 'Python', 'Go'],
+    skills: ['Java (Spring Boot)', 'Node.js (Express)', 'PHP (Laravel)', 'Python', 'Go', 'MyBatis'],
   },
   {
     category: 'databases',
     skills: ['MySQL', 'PostgreSQL', 'MongoDB', 'Oracle', 'SQLite', 'Redis'],
   },
   {
+    category: 'testing',
+    skills: ['JUnit', 'Mockito', 'JaCoCo', 'Vitest', 'Playwright'],
+  },
+  {
     category: 'devops',
-    skills: ['Docker', 'Nginx', 'Apache', 'Git (GitHub/GitLab)', 'SVN'],
+    skills: [
+      'Docker',
+      'Docker Compose',
+      'Kubernetes',
+      'OpenShift',
+      'Jenkins',
+      'GitHub Actions',
+      'SonarQube',
+      'Nginx',
+      'Apache',
+    ],
+  },
+  {
+    category: 'version-control',
+    skills: ['Git', 'GitHub', 'GitLab', 'Bitbucket', 'SVN'],
   },
   {
     category: 'tools',
-    skills: ['REST APIs', 'WebSockets', 'Postman', 'VS Code', 'IntelliJ IDEA', 'Maven', 'NPM', 'Twilio'],
+    skills: [
+      'REST APIs',
+      'WebSockets',
+      'Swagger/OpenAPI',
+      'Postman',
+      'Jira',
+      'VS Code',
+      'IntelliJ IDEA',
+      'Maven',
+      'NPM',
+      'Twilio',
+    ],
+  },
+  {
+    category: 'ai',
+    skills: [
+      'MCP',
+      'Agent Orchestration',
+      'Agent Harness & Skills',
+      'Context Engineering',
+      'Spec-Driven Development',
+      'Agent Memory (Engram)',
+      'AI Code Review',
+      'LLM APIs',
+    ],
   },
 ];
 

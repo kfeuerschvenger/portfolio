@@ -14,6 +14,17 @@ describe('SkillsSection', () => {
     expect(screen.getByText('Docker')).toBeInTheDocument();
   });
 
+  it('renders the testing, version control and ai groups', () => {
+    render(<SkillsSection />);
+
+    expect(screen.getByText('testing/')).toBeInTheDocument();
+    expect(screen.getByText('version-control/')).toBeInTheDocument();
+    expect(screen.getByText('ai/')).toBeInTheDocument();
+    expect(screen.getByText('OpenShift')).toBeInTheDocument();
+    expect(screen.getByText('Bitbucket')).toBeInTheDocument();
+    expect(screen.getByText('MCP')).toBeInTheDocument();
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(<SkillsSection />);
 
