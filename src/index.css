@@ -160,6 +160,25 @@ body {
   }
 }
 
+/* Reduced motion: no animation or transition for users who ask for it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+
+  .cursor-blink {
+    animation: none !important;
+  }
+
+  /* fade-in-up uses `forwards`, so the element still ends in its final visible state */
+}
+
 /* Matrix rain effect background */
 .matrix-bg {
   background:

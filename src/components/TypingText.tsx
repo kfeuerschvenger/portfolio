@@ -17,7 +17,9 @@ export const TypingText = ({
 }: TypingTextProps) => {
   // Read once on mount: the full text is shown at once and nothing animates for these users
   const [reducedMotion] = useState(
-    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    () =>
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   );
   const [displayedText, setDisplayedText] = useState('');
   const [started, setStarted] = useState(false);

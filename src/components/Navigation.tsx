@@ -41,6 +41,8 @@ export const Navigation = () => {
   }, []);
 
   useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+
     // The mobile menu is md:hidden, so a menu left open would reappear when the viewport shrinks again
     const desktopQuery = window.matchMedia('(min-width: 768px)');
     const handleChange = (event: MediaQueryListEvent) => {
