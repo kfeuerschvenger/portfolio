@@ -17,7 +17,7 @@ describe('NotFound', () => {
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('404');
     expect(screen.getByText('/does/not/exist')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Go to home page' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: '~ home' })).toHaveAttribute('href', '/');
   });
 
   it('sets the document title while mounted and restores it afterwards', () => {

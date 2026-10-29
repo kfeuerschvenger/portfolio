@@ -28,7 +28,10 @@ const NotFound = () => {
             <div className="pt-4">
               <span className="text-secondary">$</span>
               <span className="text-muted-foreground"> cd </span>
-              <Link to="/" aria-label="Go to home page" className="terminal-link">~</Link>
+              <Link to="/" className="terminal-link">
+                <span aria-hidden="true">~</span>
+                <span className="sr-only">~ home</span>
+              </Link>
             </div>
           </div>
         </TerminalWindow>
