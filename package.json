@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "showcase": "npm --prefix e2e/showcase run showcase:all"
   },
   "engines": {
     "node": ">=22"

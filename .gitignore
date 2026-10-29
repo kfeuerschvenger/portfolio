@@ -27,6 +27,10 @@ coverage
 # Generated from docs/assets/brand by scripts/copy-social-preview.mjs
 public/social-preview.png
 
+# Showcase pipeline scratch: the hero recording, its palette and Playwright output
+e2e/showcase/out/
+e2e/showcase/test-results/
+
 # Local only
 docs/private/
 .no-telemetry
