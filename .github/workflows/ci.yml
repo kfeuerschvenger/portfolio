@@ -1,0 +1,89 @@
+name: CI
+
+# Runs on every pull request into develop and main, on every push to them, and weekly.
+# The weekly run exists so npm audit reports new advisories even when nobody pushes.
+# Branch protection requires the quality and docker job names, so renaming either detaches
+# it from the rule. audit is deliberately not a required check: a new upstream advisory
+# would otherwise block unrelated pull requests.
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # A newer push to a pull request supersedes the run in progress. Pushes to
+  # develop and main always run to the end so every commit keeps a result.
+  group: ci-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || format('{0}-{1}', github.ref, github.sha) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  quality:
+    name: quality
+    # The weekly run only reports advisories, so it skips the jobs that need no re-run without a change
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      # Node comes from .nvmrc so CI, the Dockerfile and local development agree.
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npx tsc -b
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build
+
+  audit:
+    name: audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .nvmrc
+      # Runs from the lockfile, so no install is needed. Fails on any high or critical advisory,
+      # development dependencies included, and when the registry cannot be reached.
+      - name: Audit
+        run: npm audit --audit-level=high
+
+  docker:
+    name: docker
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      # The image is built and thrown away: it proves the Dockerfile and nginx template still work.
+      - name: Build image
+        run: docker build --tag portfolio-ci .
+      - name: Serve and check the health endpoint
+        run: |
+          docker run --detach --name portfolio-ci --publish 8080:80 portfolio-ci
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if curl --fail --silent http://localhost:8080/health; then exit 0; fi
+            sleep 1
+          done
+          docker logs portfolio-ci
+          exit 1

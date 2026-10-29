@@ -1,3 +1,4 @@
+import { Folder } from 'lucide-react';
 import { ParallaxSection } from './ParallaxSection';
 
 const skillCategories = [
@@ -34,14 +35,13 @@ export const SkillsSection = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {skillCategories.map((category, categoryIndex) => (
-            <div 
+          {skillCategories.map((category) => (
+            <div
               key={category.category}
               className="border border-border bg-card/30 p-6 rounded-sm"
-              style={{ animationDelay: `${categoryIndex * 150}ms` }}
             >
               <div className="flex items-center gap-2 mb-4">
-                <span className="text-secondary">📁</span>
+                <Folder className="w-4 h-4 text-secondary" aria-hidden="true" />
                 <span className="text-primary font-medium">{category.category}/</span>
               </div>
               

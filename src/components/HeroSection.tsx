@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MapPin } from 'lucide-react';
 import { TypingText } from './TypingText';
 import profilePhoto from '../assets/profile-photo.webp';
 
@@ -64,7 +65,7 @@ export const HeroSection = () => {
             {showLinks && (
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-in-up">
                 <div className="text-sm text-muted-foreground">
-                  <span className="text-secondary">📍</span> Puerto Madryn, Argentina
+                  <MapPin className="inline w-4 h-4 text-secondary align-text-bottom" aria-hidden="true" /> Puerto Madryn, Argentina
                 </div>
                 <a 
                   href="https://github.com/kfeuerschvenger" 

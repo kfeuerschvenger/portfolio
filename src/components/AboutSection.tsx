@@ -41,9 +41,9 @@ export const AboutSection = () => {
             <div className="flex items-start gap-4">
               <span className="text-muted-foreground/50 text-right w-8 select-none">4</span>
               <div className="text-muted-foreground leading-relaxed max-w-2xl">
-                <span className="text-accent"> * </span                >
+                <span className="text-accent"> * </span>
                 Specialized in <span className="text-primary">React</span> and <span className="text-primary">Node.js</span>,
-                with solid background in <span className="text-primary">Java (Spring Boot)</span>,
+                with solid background in <span className="text-primary">Java (Spring Boot)</span>,{' '}
                 <span className="text-primary">PHP (Laravel)</span>, and modern web technologies.
               </div>
             </div>

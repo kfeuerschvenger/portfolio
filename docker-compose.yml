@@ -8,11 +8,15 @@ services:
     networks:
       - nginx-proxy
     environment:
-      - NODE_ENV=production
-    labels:
-      - "com.nginx-proxy-manager.enable=true"
+      # Network nginx-proxy-manager connects from, trusted for X-Forwarded-For (per-visitor rate limits).
+      # The default is the whole Docker bridge range. Narrow it to the subnet of the proxy network
+      # (docker network inspect <network>), for example 172.18.0.0/16. It must not be empty.
+      - TRUSTED_PROXY_CIDR=${TRUSTED_PROXY_CIDR:-172.16.0.0/12}
+    # Uncomment to reach the site without the proxy, for example at http://localhost:8080
+    # ports:
+    #   - "8080:80"
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
       timeout: 3s
       retries: 3
@@ -21,4 +25,7 @@ services:
 networks:
   nginx-proxy:
     external: true
-    name: your_nginxproxymanager_network_name
+    # Required: name of the Docker network nginx-proxy-manager is attached to
+    # (docker network ls). Export it or put it in an untracked .env file next to this one:
+    #   PROXY_NETWORK=npm_default
+    name: ${PROXY_NETWORK:?Set PROXY_NETWORK to the nginx-proxy-manager network name}
