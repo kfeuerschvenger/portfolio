@@ -14,6 +14,15 @@ describe('ProjectsSection', () => {
     expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'));
   });
 
+  it('lists walkthrough-studio', () => {
+    render(<ProjectsSection />);
+
+    expect(screen.getByRole('link', { name: /walkthrough-studio/ })).toHaveAttribute(
+      'href',
+      'https://github.com/kfeuerschvenger/walkthrough-studio',
+    );
+  });
+
   it('links to the full repository list', () => {
     render(<ProjectsSection />);
 
