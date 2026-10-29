@@ -34,6 +34,16 @@ describe('Navigation', () => {
     }
   });
 
+  it('shows the brand mark as a decorative image beside the home link', () => {
+    render(<Navigation />);
+
+    const home = screen.getByRole('link', { name: '~/kfeuerschvenger' });
+    const mark = within(home).getByTestId('brand-mark');
+    expect(mark).toHaveAttribute('aria-hidden', 'true');
+    expect(mark).not.toHaveAttribute('role');
+    expect(mark.querySelectorAll('path')).toHaveLength(3);
+  });
+
   it('links every section from the mobile menu', () => {
     render(<Navigation />);
 
