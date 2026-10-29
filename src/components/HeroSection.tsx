@@ -53,7 +53,7 @@ export const HeroSection = () => {
             {showSubtitle && (
               <div className="text-lg md:text-2xl text-muted-foreground mb-6">
                 <TypingText 
-                  text="Software Developer" 
+                  text="Software Engineer" 
                   speed={60}
                   delay={200}
                   className="text-secondary"

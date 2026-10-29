@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { BrandMark } from './BrandMark';
 
 const navItems = [
   { label: 'home', href: '#home' },
@@ -87,7 +88,8 @@ export const Navigation = () => {
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <a href="#home" className="text-primary glow-green font-bold text-lg">
+          <a href="#home" className="flex items-center gap-2 text-primary glow-green font-bold text-lg">
+            <BrandMark />
             ~/kfeuerschvenger
           </a>
 

@@ -24,6 +24,9 @@ coverage
 *.sln
 *.sw?
 
+# Generated from docs/assets/brand by scripts/copy-social-preview.mjs
+public/social-preview.png
+
 # Local only
 docs/private/
 .no-telemetry
