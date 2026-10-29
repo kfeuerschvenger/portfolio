@@ -13,6 +13,7 @@ export const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,6 +41,17 @@ export const Navigation = () => {
   }, []);
 
   useEffect(() => {
+    // The mobile menu is md:hidden, so a menu left open would reappear when the viewport shrinks again
+    const desktopQuery = window.matchMedia('(min-width: 768px)');
+    const handleChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setIsMenuOpen(false);
+    };
+
+    desktopQuery.addEventListener('change', handleChange);
+    return () => desktopQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  useEffect(() => {
     if (!isMenuOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -49,12 +61,23 @@ export const Navigation = () => {
       }
     };
 
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!navRef.current?.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
   }, [isMenuOpen]);
 
   return (
     <nav
+      ref={navRef}
       aria-label="Primary"
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled || isMenuOpen ? 'bg-background/95 backdrop-blur-sm border-b border-border' : ''
@@ -66,7 +89,7 @@ export const Navigation = () => {
             ~/kfeuerschvenger
           </a>
 
-          <div className="hidden md:flex items-center gap-6">
+          <div data-testid="desktop-links" className="hidden md:flex items-center gap-6">
             {navItems.map((item) => (
               <a
                 key={item.label}
@@ -77,7 +100,7 @@ export const Navigation = () => {
                     : 'text-muted-foreground'
                 }`}
               >
-                <span className="text-secondary">./</span>{item.label}
+                <span aria-hidden="true" className="text-secondary">./</span>{item.label}
               </a>
             ))}
           </div>
@@ -90,7 +113,7 @@ export const Navigation = () => {
             aria-controls="mobile-menu"
             onClick={() => setIsMenuOpen((open) => !open)}
           >
-            <span className="text-secondary">$</span> menu
+            <span aria-hidden="true" className="text-secondary">$</span> menu
           </button>
         </div>
 
@@ -107,7 +130,7 @@ export const Navigation = () => {
                       : 'text-muted-foreground'
                   }`}
                 >
-                  <span className="text-secondary">./</span>{item.label}
+                  <span aria-hidden="true" className="text-secondary">./</span>{item.label}
                 </a>
               </li>
             ))}

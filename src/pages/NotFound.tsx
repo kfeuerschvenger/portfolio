@@ -6,8 +6,13 @@ const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.error('404 Error: User attempted to access non-existent route:', location.pathname);
-  }, [location.pathname]);
+    // The router keeps the document alive, so the home page title must come back on navigation
+    const previousTitle = document.title;
+    document.title = 'Page not found | Kevin Feuerschvenger';
+    return () => {
+      document.title = previousTitle;
+    };
+  }, []);
 
   return (
     <div className="scanlines flex min-h-screen items-center justify-center bg-background px-4">
@@ -23,7 +28,7 @@ const NotFound = () => {
             <div className="pt-4">
               <span className="text-secondary">$</span>
               <span className="text-muted-foreground"> cd </span>
-              <Link to="/" className="terminal-link">~</Link>
+              <Link to="/" aria-label="Go to home page" className="terminal-link">~</Link>
             </div>
           </div>
         </TerminalWindow>

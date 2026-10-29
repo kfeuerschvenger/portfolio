@@ -15,6 +15,10 @@ export const TypingText = ({
   className = '',
   onComplete 
 }: TypingTextProps) => {
+  // Read once on mount: the full text is shown at once and nothing animates for these users
+  const [reducedMotion] = useState(
+    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
   const [displayedText, setDisplayedText] = useState('');
   const [started, setStarted] = useState(false);
   // Keep the latest callback in a ref so a new function identity does not restart the typing effect
@@ -25,15 +29,21 @@ export const TypingText = ({
   }, [onComplete]);
 
   useEffect(() => {
+    if (reducedMotion) onCompleteRef.current?.();
+  }, [reducedMotion]);
+
+  useEffect(() => {
+    if (reducedMotion) return;
+
     const startTimeout = setTimeout(() => {
       setStarted(true);
     }, delay);
 
     return () => clearTimeout(startTimeout);
-  }, [delay]);
+  }, [delay, reducedMotion]);
 
   useEffect(() => {
-    if (!started) return;
+    if (reducedMotion || !started) return;
 
     let currentIndex = 0;
     const intervalId = setInterval(() => {
@@ -47,12 +57,16 @@ export const TypingText = ({
     }, speed);
 
     return () => clearInterval(intervalId);
-  }, [text, speed, started]);
+  }, [text, speed, started, reducedMotion]);
 
+  // Screen readers get the whole text up front instead of one character at a time
   return (
     <span className={className}>
-      {displayedText}
-      <span className="cursor-blink text-primary">▌</span>
+      <span className="sr-only">{text}</span>
+      <span aria-hidden="true">{reducedMotion ? text : displayedText}</span>
+      {!reducedMotion && (
+        <span aria-hidden="true" className="cursor-blink text-primary">▌</span>
+      )}
     </span>
   );
 };

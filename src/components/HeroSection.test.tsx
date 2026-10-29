@@ -18,6 +18,11 @@ const advance = (ms: number) => {
   }
 };
 
+// What a sighted visitor sees. The full name is always in the DOM for screen readers (sr-only),
+// so the animation is only observable on the aria-hidden span.
+const typedName = () =>
+  screen.getByRole('heading', { level: 1 }).querySelector('[aria-hidden="true"]') as HTMLElement;
+
 describe('HeroSection', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -30,14 +35,15 @@ describe('HeroSection', () => {
   it('types the name, then the subtitle, then reveals the links', () => {
     render(<HeroSection />);
 
-    expect(screen.getByRole('heading', { level: 1 })).not.toHaveTextContent(NAME);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveAccessibleName(NAME);
+    expect(typedName()).not.toHaveTextContent(NAME);
     expect(screen.queryByRole('link', { name: /github/ })).not.toBeInTheDocument();
 
     advance(NAME_DURATION);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(NAME);
+    expect(typedName()).toHaveTextContent(NAME);
 
     advance(SUBTITLE_DURATION);
-    expect(screen.getByText(/Software Developer/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Software Developer/).length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: /github/ })).toHaveAttribute(
       'href',
       'https://github.com/kfeuerschvenger',
@@ -52,7 +58,7 @@ describe('HeroSection', () => {
     // The subtitle mounts and HeroSection re-renders; the name must stay complete
     advance(SUBTITLE_DURATION);
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(NAME);
+    expect(typedName()).toHaveTextContent(NAME);
   });
 
   it('has no accessibility violations', async () => {
