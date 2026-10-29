@@ -7,7 +7,7 @@ const WAVES = 'M2 26h4v1h-4zM10 26h4v1h-4zM18 26h4v1h-4zM2 27h4v1h-4zM10 27h4v1h
 
 type BrandMarkProps = { className?: string };
 
-export function BrandMark({ className = 'h-8 w-8' }: BrandMarkProps) {
+export function BrandMark({ className = 'h-8 w-8 shrink-0' }: BrandMarkProps) {
   return (
     <svg
       data-testid="brand-mark"

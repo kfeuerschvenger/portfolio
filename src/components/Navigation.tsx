@@ -89,7 +89,7 @@ export const Navigation = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <a href="#home" className="flex items-center gap-2 text-primary glow-green font-bold text-lg">
-            <BrandMark className="h-8 w-8 shrink-0" />
+            <BrandMark />
             ~/kfeuerschvenger
           </a>
 
