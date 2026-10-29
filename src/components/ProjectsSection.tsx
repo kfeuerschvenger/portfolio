@@ -73,14 +73,13 @@ export const ProjectsSection = () => {
           </div>
           
           {/* Project rows */}
-          {projects.map((project, index) => (
+          {projects.map((project) => (
             <a
               key={project.name}
               href={project.url}
               target="_blank"
               rel="noopener noreferrer"
               className="block project-card border-b border-border last:border-b-0 hover:bg-muted/30 transition-all duration-300"
-              style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center">
                 {/* Name */}
