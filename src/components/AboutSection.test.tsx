@@ -12,6 +12,14 @@ describe('AboutSection', () => {
     expect(screen.getByText('about.txt - vim')).toBeInTheDocument();
   });
 
+  it('keeps the whitespace between inline elements and text', () => {
+    const { container } = render(<AboutSection />);
+    const text = container.textContent ?? '';
+
+    expect(text).toContain('Java (Spring Boot), PHP (Laravel)');
+    expect(text).toContain('Sur Software with ETL pipelines');
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(<AboutSection />);
 
