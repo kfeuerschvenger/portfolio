@@ -166,17 +166,19 @@ body {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
 
-  .cursor-blink {
+  /* Looping cues are removed outright: a one-shot bounce would freeze the cue at an offset.
+     fade-in-up uses `forwards`, so elements using it still end in their final visible state. */
+  .cursor-blink,
+  .animate-bounce {
     animation: none !important;
   }
-
-  /* fade-in-up uses `forwards`, so the element still ends in its final visible state */
 }
 
 /* Matrix rain effect background */
