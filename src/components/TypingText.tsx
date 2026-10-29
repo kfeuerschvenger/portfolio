@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface TypingTextProps {
   text: string;
@@ -17,6 +17,12 @@ export const TypingText = ({
 }: TypingTextProps) => {
   const [displayedText, setDisplayedText] = useState('');
   const [started, setStarted] = useState(false);
+  // Keep the latest callback in a ref so a new function identity does not restart the typing effect
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     const startTimeout = setTimeout(() => {
@@ -36,12 +42,12 @@ export const TypingText = ({
         currentIndex++;
       } else {
         clearInterval(intervalId);
-        onComplete?.();
+        onCompleteRef.current?.();
       }
     }, speed);
 
     return () => clearInterval(intervalId);
-  }, [text, speed, started, onComplete]);
+  }, [text, speed, started]);
 
   return (
     <span className={className}>
