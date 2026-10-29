@@ -4,9 +4,9 @@ import { axe } from '../test/axe';
 import { HeroSection } from './HeroSection';
 
 const NAME = 'Kevin Feuerschvenger';
-// 20 characters at 80 ms, then 200 ms delay and 18 characters at 60 ms, with margin
+// 20 characters at 80 ms, then 200 ms delay and 17 characters at 60 ms, with margin
 const NAME_DURATION = NAME.length * 80 + 100;
-const SUBTITLE_DURATION = 200 + 'Software Developer'.length * 60 + 100;
+const SUBTITLE_DURATION = 200 + 'Software Engineer'.length * 60 + 100;
 
 // The typing effects chain through state (start, then interval), so time has to move in small
 // steps with a React flush between them. One big jump would skip the effects that need a render.
@@ -43,7 +43,7 @@ describe('HeroSection', () => {
     expect(typedName()).toHaveTextContent(NAME);
 
     advance(SUBTITLE_DURATION);
-    expect(screen.getAllByText(/Software Developer/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Software Engineer/).length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: /github/ })).toHaveAttribute(
       'href',
       'https://github.com/kfeuerschvenger',

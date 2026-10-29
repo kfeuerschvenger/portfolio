@@ -1,9 +1,10 @@
 {
-  "name": "Kevin Feuerschvenger | Software Developer",
+  "id": "/",
+  "name": "Kevin Feuerschvenger | Software Engineer",
   "short_name": "kfeuerschvenger",
-  "description": "Software Developer based in Puerto Madryn, Argentina.",
+  "description": "Software Engineer based in Puerto Madryn, Argentina.",
   "start_url": "/",
-  "display": "standalone",
+  "display": "browser",
   "theme_color": "#090a0c",
   "background_color": "#090a0c",
   "icons": [
