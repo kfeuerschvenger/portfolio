@@ -11,10 +11,19 @@ const projects = [
   },
   {
     name: 'BreezyBoard',
-    description: 'Streamline your workflow with simple project management boards',
+    description:
+      'Kanban boards that move at the speed of wind. React, TypeScript, Node, Express and MongoDB, made in Patagonia.',
     language: 'TypeScript',
     languageColor: 'bg-accent',
     url: 'https://github.com/kfeuerschvenger/BreezyBoard',
+  },
+  {
+    name: 'walkthrough-studio',
+    description:
+      '3D house walkthrough and editor: paint walls with any texture, place lights and scrub the sun from noon to night. Paint the walls before you buy the paint.',
+    language: 'TypeScript',
+    languageColor: 'bg-accent',
+    url: 'https://github.com/kfeuerschvenger/walkthrough-studio',
   },
   {
     name: 'perlinsedge',
@@ -73,14 +82,13 @@ export const ProjectsSection = () => {
           </div>
           
           {/* Project rows */}
-          {projects.map((project, index) => (
+          {projects.map((project) => (
             <a
               key={project.name}
               href={project.url}
               target="_blank"
               rel="noopener noreferrer"
               className="block project-card border-b border-border last:border-b-0 hover:bg-muted/30 transition-all duration-300"
-              style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center">
                 {/* Name */}

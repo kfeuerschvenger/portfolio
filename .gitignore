@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+coverage
 *.local
 
 # Editor directories and files
@@ -22,3 +23,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Generated from docs/assets/brand by scripts/copy-social-preview.mjs
+public/social-preview.png
+
+# Showcase pipeline scratch: the hero recording, its palette and Playwright output
+e2e/showcase/out/
+e2e/showcase/test-results/
+docs/assets/screens/*.tmp
+
+# Local only
+docs/private/
+.no-telemetry
+.atl/

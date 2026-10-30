@@ -11,6 +11,9 @@ build/
 .next/
 out/
 
+# Showcase capture pipeline (not part of the app)
+e2e/
+
 # Testing
 coverage/
 .nyc_output/
@@ -53,7 +56,12 @@ docker-compose*.yml
 README.md
 CHANGELOG.md
 LICENSE
-docs/
+docs/*
+!docs/assets/
+docs/assets/*
+!docs/assets/brand/
+docs/assets/brand/*
+!docs/assets/brand/social-preview.png
 
 # Other
 *.log

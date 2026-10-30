@@ -16,17 +16,25 @@ export const ParallaxSection = ({
   const sectionRef = useRef<HTMLElement>(null);
   const [offset, setOffset] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  // Read once on mount: the translateY offset is skipped for users who ask for reduced motion
+  const [reducedMotion] = useState(
+    () =>
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
 
   useEffect(() => {
     const handleScroll = () => {
       if (sectionRef.current) {
         const rect = sectionRef.current.getBoundingClientRect();
         const windowHeight = window.innerHeight;
-        
+
         if (rect.top < windowHeight && rect.bottom > 0) {
           setIsVisible(true);
-          const scrolled = windowHeight - rect.top;
-          setOffset(scrolled * speed);
+          if (!reducedMotion) {
+            const scrolled = windowHeight - rect.top;
+            setOffset(scrolled * speed);
+          }
         }
       }
     };
@@ -35,7 +43,7 @@ export const ParallaxSection = ({
     handleScroll();
     
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [speed]);
+  }, [speed, reducedMotion]);
 
   return (
     <section

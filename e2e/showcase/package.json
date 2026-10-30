@@ -1,0 +1,19 @@
+{
+  "name": "portfolio-showcase",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Screenshot and hero animation pipeline for the portfolio README",
+  "scripts": {
+    "install:browsers": "playwright install chromium",
+    "showcase": "node capture.mjs",
+    "showcase:hero": "node capture.mjs hero-video && node gif.mjs",
+    "showcase:all": "node run-all.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "playwright": "1.64.1"
+  }
+}
