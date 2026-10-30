@@ -11,6 +11,9 @@ build/
 .next/
 out/
 
+# Showcase capture pipeline (not part of the app)
+e2e/
+
 # Testing
 coverage/
 .nyc_output/
