@@ -34,7 +34,9 @@ npm run showcase:hero      # record the hero flow, then convert it
 npm run showcase:all       # stills and recording in one run, then convert
 ```
 
-`showcase:all` calls `capture.mjs` once with the slug `all`, so there is one build and one preview server for the stills and the recording, and then `gif.mjs`. From the repo root, `npm run showcase` runs the same thing.
+`showcase:all` runs `run-all.mjs`, which calls `capture.mjs` once with the slug `all`, so there is one build and one preview server for the stills and the recording. It then runs `gif.mjs` whenever `out/hero.json` was written during that run, even if a still failed, and exits non-zero when any step failed. From the repo root, `npm run showcase` runs the same thing.
+
+When running the commands by hand, `SHOWCASE_OUT` must be set to the same folder for both `capture.mjs` and `gif.mjs`, or the GIF and the MP4 are published somewhere other than the shots.
 
 When ffmpeg is installed but not on the PATH, find it and point `FFMPEG` at it. In PowerShell:
 
@@ -57,7 +59,7 @@ The script prints `OK` or `FAIL` for each shot and exits non-zero at the end whe
 
 The preview server is stopped at the end, also when a shot fails. It is also stopped on Ctrl+C and on SIGTERM, and on any exit of the process: on Windows the process tree is killed with `taskkill /T /F`. A hard kill of node itself (for example `taskkill /F` on the capture process) cannot run any handler and can leave the server listening.
 
-Outputs are atomic. Stills are written to `out/stills/` and copied to the output folder only when both the raw and the framed file of that still exist. `gif.mjs` encodes the GIF and the MP4 to temporary files in `out/` and copies them only when the GIF fits the 8 MB budget, so a failed run leaves the committed assets untouched. The recording step deletes the previous `out/hero.webm` and `out/hero.json` first, and `gif.mjs` refuses to run when `hero.json` is missing or older than `hero.webm`.
+Outputs are staged. Stills are written to `out/stills/`, copied to `<name>.tmp` in the output folder, and renamed into place only after both the raw and the framed copy succeeded. `gif.mjs` encodes the GIF and the MP4 to temporary files in `out/`, removes them on success and on failure, and publishes with the same copy-then-rename step only when the GIF fits the 8 MB budget, so a failed encode leaves the committed assets untouched. The rename is not a transaction across files: a crash between the two renames can leave one new file beside one old one. The recording step deletes the previous `out/hero.webm` and `out/hero.json` first, and `gif.mjs` refuses to run when `hero.json` is missing, older than `hero.webm`, or does not hold finite `start` and `end` values with `end` greater than `start`.
 
 ## The shots
 

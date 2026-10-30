@@ -4,13 +4,13 @@
 // app, serves the build with `vite preview` on a free odd port (or reuses the
 // page named by SHOWCASE_URL), takes each shot in a real browser and writes two
 // files per still: the raw screenshot, and the same screenshot inside a
-// browser frame. The hero slug records a video instead, which gif.mjs turns
+// browser frame. The hero-video slug records a video instead, which gif.mjs turns
 // into a GIF and an MP4.
 //
 // Everything requested runs in one invocation: one build, one preview server. A
 // failing shot does not stop the others; every failure is reported and the exit
-// code is non-zero at the end. Stills are written to out/ first and copied to the
-// output folder only when both files of the still exist.
+// code is non-zero at the end. Stills are written to out/ first, then copied to
+// temporary names in the output folder and renamed into place once both copies exist.
 //
 // Usage, from e2e/showcase/:
 //   node capture.mjs                     every still
@@ -19,7 +19,7 @@
 //   node capture.mjs hero-video          the video, for gif.mjs
 
 import { spawn, spawnSync } from 'node:child_process';
-import { copyFile, mkdir, rm, stat, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import net from 'node:net';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -86,9 +86,10 @@ const build = () => {
 };
 
 /** Polls the URL until it answers, or gives up. */
-const waitForServer = async (url, server) => {
+const waitForServer = async (url, server, spawnError) => {
   const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
+    if (spawnError()) throw spawnError();
     if (server.exitCode !== null) throw new Error(`vite preview exited with code ${server.exitCode}`);
     try {
       if ((await fetch(url)).ok) return;
@@ -118,12 +119,20 @@ const startServer = async () => {
     stdio: 'ignore',
   });
 
+  let spawnError;
+  server.on('error', error => {
+    spawnError = new Error(`could not start vite preview: ${error.message}`);
+  });
+
   const base = `http://127.0.0.1:${port}`;
   const running = () => server.exitCode === null && server.signalCode === null;
 
-  /** Kills the server synchronously, the whole tree on Windows where kill() can leave children behind. */
+  let killed = false;
+
+  /** Kills the server synchronously, the whole tree on Windows where kill() can leave children behind. Runs once. */
   const killNow = () => {
-    if (!running() || server.pid === undefined) return;
+    if (killed || !running() || server.pid === undefined) return;
+    killed = true;
     if (process.platform === 'win32') {
       spawnSync('taskkill', ['/pid', String(server.pid), '/T', '/F'], { stdio: 'ignore' });
     } else {
@@ -151,7 +160,7 @@ const startServer = async () => {
   }
 
   try {
-    await waitForServer(base, server);
+    await waitForServer(base, server, () => spawnError);
   } catch (error) {
     await stop();
     throw error;
@@ -413,9 +422,18 @@ const takeStill = async (shot, { browser, base, framePage }) => {
   }
 };
 
-/** Copies the staged files of a still into the output folder. */
+/**
+ * Copies the staged files of a still into the output folder under temporary names, then
+ * renames them into place (same directory) only after every copy succeeded.
+ */
 const publish = async files => {
-  for (const file of files) await copyFile(path.join(STAGE, file), path.join(OUT, file));
+  const temps = files.map(file => path.join(OUT, `${file}.tmp`));
+  try {
+    await Promise.all(files.map((file, index) => copyFile(path.join(STAGE, file), temps[index])));
+    for (const [index, file] of files.entries()) await rename(temps[index], path.join(OUT, file));
+  } finally {
+    await Promise.all(temps.map(temp => rm(temp, { force: true })));
+  }
 };
 
 // ---------------------------------------------------------------------------

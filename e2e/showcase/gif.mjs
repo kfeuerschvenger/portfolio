@@ -6,14 +6,16 @@
 // cut points beside the video). It must stay under 8 MB, which is what the README
 // can carry without slowing the page. When the first encode is over, the script
 // retries with coarser dithering and fewer colours before it gives up. Both files
-// are encoded under out/ and copied to the output folder only on success.
+// are encoded under out/, copied to temporary names in the output folder and
+// renamed into place only when both copies succeeded.
 //
 // ffmpeg is found through FFMPEG, then the PATH.
 //
 // Usage, from e2e/showcase/: node gif.mjs
 
 import { spawnSync } from 'node:child_process';
-import { copyFile, mkdir, readFile, rm, stat } from 'node:fs/promises';
+import { rmSync } from 'node:fs';
+import { copyFile, mkdir, readFile, rename, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -41,7 +43,20 @@ const ATTEMPTS = [
   { step: 24, colors: 64, dither: 'none' },
 ];
 
+// Everything is encoded to temporary names in out/ and published only when the GIF fits.
+const palette = path.join(WORK, 'hero-palette.png');
+const gif = path.join(WORK, 'hero.tmp.gif');
+const mp4 = path.join(WORK, 'hero.tmp.mp4');
+const finalGif = path.join(OUT, 'hero.gif');
+const finalMp4 = path.join(OUT, 'hero.mp4');
+
+/** Removes the scratch files of the encode, on success and on failure. */
+const cleanup = () => {
+  for (const file of [palette, gif, mp4]) rmSync(file, { force: true });
+};
+
 const fail = message => {
+  cleanup();
   console.error(`FAIL ${message}`);
   process.exit(1);
 };
@@ -79,14 +94,12 @@ try {
   fail(`No usable recording at ${video} and ${cutFile}. Record it first: node capture.mjs hero-video`);
 }
 
+if (!Number.isFinite(cut?.start) || !Number.isFinite(cut?.end) || cut.end <= cut.start) {
+  fail(`${cutFile} must hold finite numbers "start" and "end" with end greater than start, got ${JSON.stringify(cut)}. Record again: node capture.mjs hero-video`);
+}
+
 await mkdir(OUT, { recursive: true });
 
-// Everything is encoded to temporary names in out/ and published only when the GIF fits.
-const palette = path.join(WORK, 'hero-palette.png');
-const gif = path.join(WORK, 'hero.tmp.gif');
-const mp4 = path.join(WORK, 'hero.tmp.mp4');
-const finalGif = path.join(OUT, 'hero.gif');
-const finalMp4 = path.join(OUT, 'hero.mp4');
 const trim = ['-ss', String(cut.start), '-to', String(cut.end), '-i', video];
 const scale = `fps=${FPS},scale=${WIDTH}:-1:flags=lanczos`;
 const snap = step => `lutrgb=r='trunc(val/${step})*${step}':g='trunc(val/${step})*${step}':b='trunc(val/${step})*${step}'`;
@@ -146,11 +159,19 @@ run('encoding the MP4', [
 
 const mp4Bytes = await size(mp4);
 
-// Both encodes succeeded and the GIF fits: publish them.
-await copyFile(gif, finalGif);
-await copyFile(mp4, finalMp4);
-await rm(gif, { force: true });
-await rm(mp4, { force: true });
+// Both encodes succeeded and the GIF fits: copy both to temporary names in the
+// output folder, then rename them into place only when both copies exist.
+const stagedGif = `${finalGif}.tmp`;
+const stagedMp4 = `${finalMp4}.tmp`;
+try {
+  await Promise.all([copyFile(gif, stagedGif), copyFile(mp4, stagedMp4)]);
+  await rename(stagedGif, finalGif);
+  await rename(stagedMp4, finalMp4);
+} catch (error) {
+  await Promise.all([rm(stagedGif, { force: true }), rm(stagedMp4, { force: true })]);
+  fail(`could not publish the animation: ${error.message}`);
+}
+cleanup();
 
 console.log(`OK   hero.gif  ${megabytes(gifBytes)}`);
 console.log(`OK   hero.mp4  ${megabytes(mp4Bytes)}`);
