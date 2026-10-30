@@ -1,0 +1,57 @@
+# Portfolio architecture, light variant.
+# Render from this folder:
+#   d2 --theme 0 --pad 40 architecture.d2 architecture.svg
+#   d2 --theme 200 --pad 40 architecture-dark.d2 architecture-dark.svg
+# Colours follow the site palette: phosphor green, amber, cyan and red, with the darkened hues
+# for a white page. architecture-dark.d2 imports this file and swaps the classes for the CRT tones.
+
+grid-columns: 3
+horizontal-gap: 150
+
+classes: {
+  green: {style: {fill: "#effaf1"; stroke: "#1a7f37"; font-color: "#1a7f37"; font: mono; border-radius: 4; stroke-width: 2}}
+  amber: {style: {fill: "#fff6e0"; stroke: "#9a6700"; font-color: "#9a6700"; font: mono; border-radius: 4; stroke-width: 2}}
+  cyan: {style: {fill: "#e6f6f9"; stroke: "#0b7285"; font-color: "#0b7285"; font: mono; border-radius: 4; stroke-width: 2}}
+  red: {style: {fill: "#fdeceb"; stroke: "#b42318"; font-color: "#b42318"; font: mono; border-radius: 4; stroke-width: 2}}
+  group-green: {style: {fill: "#f7fcf8"; stroke: "#1a7f37"; font-color: "#1a7f37"; font: mono; border-radius: 6; stroke-dash: 4; bold: true}}
+  group-amber: {style: {fill: "#fffbf0"; stroke: "#9a6700"; font-color: "#9a6700"; font: mono; border-radius: 6; stroke-dash: 4; bold: true}}
+  group-cyan: {style: {fill: "#f2fafc"; stroke: "#0b7285"; font-color: "#0b7285"; font: mono; border-radius: 6; stroke-dash: 4; bold: true}}
+  flow: {style: {stroke: "#357d35"; font-color: "#357d35"; font: mono; stroke-width: 2}}
+}
+
+pipelines: '$ make all' {
+  class: group-amber
+  grid-rows: 5
+  vertical-gap: 40
+  showcase: "Showcase pipeline\nPlaywright builds and previews\nthe app, stills and hero,\nffmpeg GIF and MP4" {class: red}
+  assets: "docs/assets/screens\nframed stills, hero.gif" {shape: cylinder; class: amber}
+  ci: "GitHub Actions\nquality, audit, docker,\nweekly audit" {class: cyan}
+  build: "Build\npredev and prebuild copy the\nsocial preview, then tsc -b\nand vite build into dist/" {class: amber}
+  image: "Docker multi-stage\nnode:22-alpine builds,\nnginx:alpine serves" {class: green}
+}
+
+runtime: '$ ./serve' {
+  class: group-green
+  grid-rows: 3
+  vertical-gap: 60
+  browser: "Visitor's browser\nHTTPS to feuerschvenger.com" {class: cyan}
+  npm: "nginx-proxy-manager\nTLS and domain,\nexternal Docker network" {class: amber}
+  nginx: "nginx:alpine container\nsecurity headers, rate limits,\nbot block, /health,\nSPA fallback to index.html" {class: green}
+}
+
+app: '$ ls src/' {
+  class: group-cyan
+  grid-rows: 2
+  vertical-gap: 60
+  spa: "React 19 SPA\nreact-router, two lazy routes\nHero, About, Projects, Skills,\nContact, Footer, BrandMark" {class: cyan}
+  notfound: "404 page\nshell-style error screen" {class: red}
+}
+
+pipelines.showcase -> pipelines.assets {class: flow}
+pipelines.ci -> pipelines.build: "lint, tests, build" {class: flow}
+pipelines.build -> pipelines.image {class: flow}
+pipelines.image -> runtime.nginx: "COPY dist, nginx.conf" {class: flow}
+runtime.browser -> runtime.npm: "HTTPS" {class: flow}
+runtime.npm -> runtime.nginx: "HTTP, X-Forwarded-For" {class: flow}
+runtime.nginx -> app.spa: "serves dist/" {class: flow}
+app.spa -> app.notfound: "unknown route" {class: flow}
