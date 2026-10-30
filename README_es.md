@@ -66,7 +66,7 @@ Compilado cerca de las ballenas, así que resulta un poco más tranquilo que un 
 ### $ man portfolio
 
 - **Un comando por sección.** Toda la página es una larga sesión de terminal, con una barra fija que ilumina la sección en la que estás.
-- **Pensada también para el teléfono.** En pantallas chicas un botón `$ menu` abre los enlaces, se cierra con Escape y devuelve el foco donde estaba.
+- **Pensada también para el teléfono.** En pantallas pequeñas un botón `$ menu` abre los enlaces, se cierra con Escape y devuelve el foco donde estaba.
 - **Tranquila si lo pides.** Con movimiento reducido el nombre aparece completo, el cursor se queda quieto y nada se desliza.
 - **Verificada, no supuesta.** Cuarenta y tres pruebas, un análisis de accesibilidad en cada componente y un CI que nunca llega tarde.
 - **Capturas a demanda.** Las imágenes de arriba salen de un script, así que se vuelven a tomar después de cada cambio en lugar de quedar desactualizadas.
@@ -111,7 +111,7 @@ Una aplicación React de una sola página, con estilos de Tailwind CSS 4 y empaq
 ## $ npm run dev
 
 ```bash
-git clone https://github.com/kfeuerschvenger/portfolio.git
+git clone https://github.com/kfeuerschvenger/portfolio.git && cd portfolio
 npm ci
 npm run dev
 ```

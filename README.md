@@ -7,7 +7,7 @@
 
 <p align="center">
   <a href="https://github.com/kfeuerschvenger/portfolio/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/kfeuerschvenger/portfolio/ci.yml?branch=main&style=flat-square&label=CI&logo=githubactions&logoColor=white" alt="CI status"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-357d35?style=flat-square" alt="MIT licence"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-357d35?style=flat-square" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React 19">
   <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 5.9">
   <img src="https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite 7">
@@ -111,7 +111,7 @@ A React single page app, styled with Tailwind CSS 4 tokens and bundled by Vite, 
 ## $ npm run dev
 
 ```bash
-git clone https://github.com/kfeuerschvenger/portfolio.git
+git clone https://github.com/kfeuerschvenger/portfolio.git && cd portfolio
 npm ci
 npm run dev
 ```
@@ -147,4 +147,4 @@ The README is the boot screen. The deep docs are the man pages.
   <a href="https://feuerschvenger.com/"><img src="https://img.shields.io/badge/Portfolio-feuerschvenger.com-357d35?style=flat-square&logo=googlechrome&logoColor=white" alt="Portfolio"></a>
 </p>
 
-<p align="center"><sub>Code released under the <a href="LICENSE">MIT licence</a>. The profile photo and the brand assets (the K mark, banners and icons) are all rights reserved.</sub></p>
+<p align="center"><sub>Code released under the <a href="LICENSE">MIT license</a>. The profile photo and the brand assets (the K mark, banners and icons) are all rights reserved.</sub></p>

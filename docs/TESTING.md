@@ -72,10 +72,10 @@ npm run lint
 npx tsc -b
 npm test
 npm run build
-npm audit
+npm audit --audit-level=high
 ```
 
-These are the same steps the [CI](CI.md) runs. The container itself is exercised by the `docker` job, which builds the image and polls `/health`. The screenshots have their own pipeline, see [CUSTOMIZATION.md](CUSTOMIZATION.md#retaking-the-screenshots).
+These are the same steps the [CI](CI.md) `quality` and `audit` jobs run. The container itself is exercised by the `docker` job, which builds the image and polls `/health`. The screenshots have their own pipeline, see [CUSTOMIZATION.md](CUSTOMIZATION.md#retaking-the-screenshots).
 
 ---
 

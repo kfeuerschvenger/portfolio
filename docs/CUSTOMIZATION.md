@@ -74,7 +74,7 @@ Create the component, wrap it in `ParallaxSection` with an `id`, add it to `src/
 | Favicons and icons | `public/` | `index.html` and the manifest |
 | In-app mark | `src/components/BrandMark.tsx` | The navigation bar |
 
-The mark is drawn on a 32 pixel grid, so keep any edit on whole cells to keep the edges crisp. The brand files are not covered by the MIT licence, see the [LICENSE](../LICENSE).
+The mark is drawn on a 32 pixel grid, so keep any edit on whole cells to keep the edges crisp. The brand files are not covered by the MIT license, see the [LICENSE](../LICENSE).
 
 ## Retaking the screenshots
 
